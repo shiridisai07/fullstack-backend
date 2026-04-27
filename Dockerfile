@@ -1,23 +1,21 @@
 # ========== Stage 1: Build ==========
-FROM maven:3.9-eclipse-temurin-17 AS build
+FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 COPY pom.xml .
 COPY .mvn .mvn
 COPY mvnw .
 RUN chmod +x mvnw
-# Download dependencies first (cached layer)
-RUN mvn dependency:go-offline -B
+RUN ./mvnw dependency:go-offline -B
 COPY src ./src
-RUN mvn clean package -DskipTests -B
+RUN ./mvnw clean package -DskipTests -B
 
 # ========== Stage 2: Run ==========
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 COPY --from=build /app/target/*.jar app.jar
 
-# Create uploads directory
 RUN mkdir -p /app/uploads
 
 EXPOSE 8080
 
-ENTRYPOINT ["java", "-jar", "app.jar"]
+CMD ["java", "-jar", "app.jar"]
